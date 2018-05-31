@@ -29,6 +29,7 @@
   $oidc = new OpenIDConnectClient(
         'https://www.snap4city.org',
         'php-notificator',
+        '...secret...'
     );
 
     $oidc->setVerifyHost(false);
