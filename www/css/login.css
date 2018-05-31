@@ -1,0 +1,125 @@
+/* Alarm Management System.
+   Copyright (C) 2017 DISIT Lab http://www.disit.org - University of Florence
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2
+   of the License, or (at your option) any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+
+#loginIntroContainer
+{
+   width: 50%;
+   height: 100%;
+   float: left;
+}
+
+#loginIntroMsg
+{
+   font-size: 38px;
+   display: flex;
+   align-items: center; 
+   justify-content: center;
+}
+
+#loginCarouselRow
+{
+   height: 50%; 
+}
+
+#loginCarouselTextRow div.item
+{
+   text-align: center;
+   font-size: 28px;
+}
+
+#loginCarousel1
+{
+   background-image: url("../img/loginSlider/alarm.jpg");
+   background-size: contain;
+   background-repeat: no-repeat;
+   background-position: center;
+}
+
+#loginCarousel2
+{
+   background-image: url("../img/loginSlider/addressBook.jpg");
+   background-size: contain;
+   background-repeat: no-repeat;
+   background-position: center;
+}
+
+#loginCarousel3
+{
+   background-image: url("../img/loginSlider/womanTexting.jpg");
+   background-size: contain;
+   background-repeat: no-repeat;
+   background-position: center;
+}
+
+#loginFormContainer
+{
+   width: 50%;
+   height: 100%;
+   float: left;
+   color: white; 
+   background: #035863; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left top, #035863, #06b0c6); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(bottom right, #035863, #06b0c6); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(bottom right, #035863, #06b0c6); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to bottom right, #035863, #06b0c6); /* Standard syntax */
+}
+
+#loginTitle
+{
+   font-weight: bold;
+   font-size: 42px;
+   text-align: center;
+   padding-left: 0px;
+   margin-bottom: 15px;
+}
+
+#loginSubtitle
+{
+   font-size: 20px;
+   text-align: center;
+   padding-left: 0px;
+   margin-bottom: 15px;
+}
+
+#loginFormUsrLbl, #loginFormPwdLbl
+{
+   height: 35px;
+   font-size: 18px;
+   font-weight: bold;
+   margin-bottom: 10px;
+}
+
+#loginUsr, #loginPwd
+{
+   height: 35px;
+   font-size: 18px;
+   text-align: center;
+   margin-bottom: 10px;
+}
+
+#rstLoginFormBtn, #loginBtn
+{
+   font-size: 18px;
+}
+
+#loginUsr, #loginPwd
+{
+   color: black;
+}
+
+#loginLoadingIcon
+{
+   display: none;
+}

@@ -1,0 +1,82 @@
+/* Alarm Management System.
+   Copyright (C) 2017 DISIT Lab http://www.disit.org - University of Florence
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2
+   of the License, or (at your option) any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+
+#emailBookTableContainer
+{
+   overflow-y: auto;
+   display: none;
+   opacity: 0.0;
+   transition: opacity 0.1s;
+   transition-timing-function: linear; 
+}
+
+#delEmailUndeletableModal div.modal-body
+{
+   text-align: center;
+}
+
+#addEmailAddressModal div.modal-body, #editEmailAddressModal div.modal-body
+{
+    padding-bottom: 0px;
+}
+
+#addEmailAddressModal div.modal-footer, #editEmailAddressModal div.modal-footer
+{
+    padding-top: 0px;
+}
+
+#addEmailplaceholderRow, #editEmailplaceholderRow
+{
+   margin-top: 10px;
+   width: 850px;
+   padding-left: 24px;
+}
+
+.addEmailNotificationDmModalBodyField
+{
+   text-align: center;
+}
+
+#addEmailTxtRow
+{
+   margin-left: 10px;
+}
+
+#addEmailSub, #editEmailSub
+{
+   width: 850px;
+}
+
+#editEmailTxtRow
+{
+   margin-left: 10px;
+}
+
+#emailMsg
+{
+   display: none;
+}
+
+#addEmailModalOk1, #addEmailModalOk2, #addEmailModalKo1, #addEmailModalKo2,
+#delEmailModalOk1, #delEmailModalOk2, #delEmailModalKo1, #delEmailModalKo2,
+#editEmailModalOk1, #editEmailModalOk2, #editEmailModalKo1, #editEmailModalKo2
+{
+   display: none;
+}
+
+#addEmailNotificationModalMsg, #editEmailNotificationModalMsg
+{
+    color: black;
+}

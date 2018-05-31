@@ -1,0 +1,190 @@
+/* Notifications Management System.
+   Copyright (C) 2017 DISIT Lab http://www.disit.org - University of Florence
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2
+   of the License, or (at your option) any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+
+#eventsManagerAppMenuContainer
+{
+   font-size: 20px;
+   margin-top: 15px;
+   display: none;
+   opacity: 0.0;
+   transition: opacity 0.1s;
+   transition-timing-function: linear;
+}
+
+#addDmEmailNotificationImpossibleModal div.modal-body
+{
+   text-align: center;
+}
+
+#addNotificationBtn
+{
+   margin-top: 12px;
+}
+
+#dmEventsManagerTableContainer
+{
+   display: none;
+   opacity: 0.0;
+   transition: opacity 0.1s;
+   transition-timing-function: linear; 
+}
+
+#delDmNotificationModalOk1, #delDmNotificationModalOk2, #delDmNotificationModalKo1, #delDmNotificationModalKo2
+{
+   display: none;
+}
+
+#eventsManagerAppMenuLabel
+{
+   padding-left: 0px;
+}
+
+#eventsManagerAppMenuLabel, #delDmNotificationModalBody2
+{
+   font-weight: bold;
+}
+
+#eventsManagerAppSelect
+{
+   width: 100%;
+   height: 100%;
+}
+
+#eventsManagerTableContainer
+{
+   overflow-y: auto;
+}
+
+#mngDmEventsModal div.modal-dialog, #addEmailNotificationDmModal div.modal-dialog, #editEmailNotificationDmModal div.modal-dialog
+{
+   width: 1300px;
+   max-height: 1200px;
+}
+
+.ruleRecapLbl
+{
+   font-size: 16px;
+   width: 20%;
+   float: left;
+   display: block;
+   color: white;
+   font-family: RalewaySemibold;
+   background: #058494; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #058494, #07afc5); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #058494, #07afc5); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #058494, #07afc5); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #058494, #07afc5); /* Standard syntax */   
+}
+
+.ruleRecapCnt
+{
+   font-size: 15px;
+   width: 20%;
+   float: left;
+   display: block;
+   color: white;
+   font-family: RalewaySemibold;
+   font-style: italic;
+   background: #07afc5; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #07afc5, #6be9fa); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #07afc5, #6be9fa); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #07afc5, #6be9fa); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #07afc5, #6be9fa); /* Standard syntax */
+}
+
+.ruleRecapCnt img
+{
+   width: 18px;
+   height: 18px;
+}
+
+.ruleRecapLink a, .ruleRecapLink a:active, .ruleRecapLink a:visited, .ruleRecapLink a:enabled, .ruleRecapLink a:valid
+{
+   font-size: 15px;
+   color: white;
+   text-decoration: none;
+}
+
+div.ruleRecapLink a.generatorLinkBtn
+{
+   display: block;
+   width: 100%;
+   height: 100%;
+}
+
+.ruleRecapLink:hover
+{
+   background: #ffcc00; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #ffcc00, #ffe680); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #ffcc00, #ffe680); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #ffcc00, #ffe680); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #ffcc00, #ffe680); /* Standard syntax */   
+   cursor: pointer;
+   color: black;
+}
+
+.ruleRecapLink:hover a
+{
+   color: black;
+   text-decoration: none;
+}
+
+.addEmailNotificationDmModalBodyLbl
+{
+   font-size: 16px;
+   color: white;
+   font-family: RalewaySemibold;
+   background: #058494; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #058494, #07afc5); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #058494, #07afc5); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #058494, #07afc5); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #058494, #07afc5); /* Standard syntax */ 
+}
+
+.addEmailNotificationDmModalBodyField
+{
+   padding-top: 15px;
+   padding-bottom: 15px;
+}
+
+.addEmailNotificationDmModalBodyField .form-group, .addEmailNotificationDmModalBodyField .form-control
+{
+   margin-bottom: 0px;
+}
+
+#addDmEmailNotificationRecFromBook
+{
+   width: 75%;
+}
+
+#delDmNotificationModalBody1, #delDmNotificationModalBody2, #delDmNotificationModalOk1, #delDmNotificationModalKo1
+{
+   font-size: 14px;
+}
+
+#addDmEmailNotificationEmailBookMsg, #addDmEmailNotificationMsgComposerContainer, #addDmEmailNotificationRecFromBookMsg,
+#addDmEmailNotificationModalOk1, #addDmEmailNotificationModalOk2, #addDmEmailNotificationModalKo1, #addDmEmailNotificationModalKo2
+#editDmEmailNotificationEmailBookMsg, #editDmEmailNotificationMsgComposerContainer, #editDmEmailNotificationRecFromBookMsg,
+#editDmEmailNotificationModalOk1, #editDmEmailNotificationModalOk2, #editDmEmailNotificationModalKo1, #editDmEmailNotificationModalKo2,
+#editDmEmailNotificationModalKo3, #editDmEmailNotificationModalKo4
+{
+   display: none;
+}
+
+#addDmEmailNotificationMsgComposerSub, #editDmEmailNotificationMsgComposerSub
+{
+   width: 100%;
+}
+

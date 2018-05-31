@@ -1,0 +1,60 @@
+/* Alarm Management System.
+   Copyright (C) 2017 DISIT Lab http://www.disit.org - University of Florence
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2
+   of the License, or (at your option) any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+
+#addressBookMainLoading
+{
+   opacity: 1.0;
+   transition: opacity 0.1s;
+   transition-timing-function: linear; 
+}
+
+div.loadingMsg
+{
+   font-size: 32px;
+   padding-top: 15px;
+   padding-bottom: 15px;
+}
+
+div.loadingSpin i
+{
+   font-size: 64px;
+   color: #048CAD;
+}
+
+#delEmailAddressUndeletableModal div.modal-body
+{
+   text-align: center;
+}
+
+#emailAddressBookTableContainer
+{
+   overflow-y: auto;
+   display: none;
+   opacity: 0.0;
+   transition: opacity 0.1s;
+   transition-timing-function: linear; 
+}
+
+#addEmailAddressModalOk1, #addEmailAddressModalOk2, #addEmailAddressModalKo1, #addEmailAddressModalKo2,
+#editEmailAddressModalOk1, #editEmailAddressModalOk2, #editEmailAddressModalKo1, #editEmailAddressModalKo2,
+#delEmailAddressModalOk1, #delEmailAddressModalOk2, #delEmailAddressModalKo1, #delEmailAddressModalKo2
+{
+   display: none;
+}
+
+#addEmailAddressModalMsg, #editEmailAddressModalMsg
+{
+    color: red;
+}

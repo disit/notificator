@@ -1,0 +1,496 @@
+/* Alarm Management System.
+   Copyright (C) 2017 DISIT Lab http://www.disit.org - University of Florence
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License
+   as published by the Free Software Foundation; either version 2
+   of the License, or (at your option) any later version.
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. */
+
+@font-face {
+    font-family: SerifFlf;
+    src: url(../fonts/SerifFlf/SansSerifFLF.otf);
+}
+
+@font-face {
+    font-family: SerifFlfDemiBold;
+    src: url(../fonts/SerifFlf/SansSerifDemibold.otf);
+}
+
+@font-face {
+    font-family: SansSerifExbFLF;
+    src: url(../fonts/SerifFlf/SansSerifExbFLF.otf);
+}
+
+/*RALEWAY*/
+@font-face {
+    font-family: RalewayBold;
+    src: url(../fonts/Raleway/Raleway-Bold.ttf);
+}
+
+@font-face {
+    font-family: RalewayExtraBold;
+    src: url(../fonts/Raleway/Raleway-ExtraBold.ttf);
+}
+
+@font-face {
+    font-family: RalewayExtraLight;
+    src: url(../fonts/Raleway/Raleway-ExtraLight.ttf);
+}
+
+@font-face {
+    font-family: RalewayHeavy;
+    src: url(../fonts/Raleway/Raleway-Heavy.ttf);
+}
+
+@font-face {
+    font-family: RalewayLight;
+    src: url(../fonts/Raleway/Raleway-Light.ttf);
+}
+
+@font-face {
+    font-family: RalewayMedium;
+    src: url(../fonts/Raleway/Raleway-Medium.ttf);
+}
+
+@font-face {
+    font-family: RalewayRegular;
+    src: url(../fonts/Raleway/Raleway-Regular.ttf);
+}
+
+@font-face {
+    font-family: RalewaySemibold;
+    src: url(../fonts/Raleway/Raleway-SemiBold.ttf);
+}
+
+@font-face {
+    font-family: RalewayThin;
+    src: url(../fonts/Raleway/Raleway-Thin.ttf);
+}
+
+html
+{
+   width: 100%;
+   height: 100%;
+}
+
+body 
+{
+   width: 100%;
+   height: 100%;
+   margin: 0px;
+   overflow-x: hidden;
+   overflow-y: hidden;
+   font-family: RalewayRegular;
+}
+
+.floatLeft
+{
+   float: left;
+}
+
+.centerWithFlex
+{
+   display: flex;
+   align-items: center; 
+   justify-content: center;
+   text-align: center;
+}
+
+#disitLink, #disitLink:visited, #disitLink:valid, #disitLink:active, #disitLink:default, #disitLink:link, #disitLink:hover
+{
+   color: white;
+   text-decoration: none;
+}
+
+#disitLink:hover
+{
+   color: red;
+}
+
+#appHeader
+{
+   height: 60px;
+   padding-left: 0px;
+   padding-right: 0px;
+   color: white;
+   font-size: 40px;
+   font-weight: bold;
+   background-color: transparent;
+   display: flex;
+   align-items: center; 
+   justify-content: center;
+   opacity: 0.0;
+   transition: opacity 0.5s;
+   transition-timing-function: linear; 
+   background: #282f39; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left top, #282f39, #96a3b6); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(bottom right, #282f39, #96a3b6); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(bottom right, #282f39, #96a3b6); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to bottom right, #282f39, #96a3b6); /* Standard syntax */
+}
+
+#headerSpan
+{
+   transition: opacity 0.3s;
+   transition-timing-function: linear;
+}
+
+#mainMenu
+{
+   width: 100%;
+   height: 45px;
+   background-color: #058494;
+   display: none;
+   font-size: 10px;
+}
+
+div.mainMenuItemContainer
+{
+   float: left;
+   width: 150px;
+   height: 100%;
+   background: #058494; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #058494, #07afc5); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #058494, #07afc5); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #058494, #07afc5); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #058494, #07afc5); /* Standard syntax */   
+}
+
+div.mainMenuItemContainer:hover, div.mainMenuItemContainer.active
+{
+   background: #ffcc00; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #ffcc00, #ffe680); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #ffcc00, #ffe680); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #ffcc00, #ffe680); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #ffcc00, #ffe680); /* Standard syntax */   
+   cursor: pointer;
+}
+
+div.mainMenuItemContainer.active div.mainMenuTextContainer
+{
+   color: black;
+}
+
+div.mainMenuTextContainer
+{
+   width: 105px;
+   height: 45px;
+   color: white;
+   font-size: 16px;
+   font-variant: small-caps;
+   display: flex;
+   align-items: center; 
+   justify-content: center;
+   text-align: center;
+}
+
+div.mainMenuTextContainer:hover
+{
+   color: black;
+}
+
+.mainMenuItemContainer a:hover, .mainMenuItemContainer a:visited, .mainMenuItemContainer a:after, .mainMenuItemContainer a:focus, .mainMenuItemContainer a:link, .mainMenuItemContainer a:valid
+{
+   text-decoration: none;
+}
+
+.mainMenuIconContainer
+{
+   float: left;
+   width: 45px;
+   height: 45px;
+   display: flex;
+   align-items: center; 
+   justify-content: center;
+}
+
+#mainLoading
+{
+   opacity: 1.0;
+   transition: opacity 0.1s;
+   transition-timing-function: linear; 
+}
+
+div.loadingMsg
+{
+   font-size: 32px;
+   padding-top: 15px;
+   padding-bottom: 15px;
+}
+
+div.loadingSpin i
+{
+   font-size: 64px;
+   color: #048CAD;
+}
+
+#mainContainer
+{
+   width: 100%;
+   opacity: 0.0;
+   transition: opacity 0.3s;
+   transition-timing-function: linear;
+   overflow-x: hidden;
+   overflow-y: auto;
+}
+
+table.mainContainerTable thead
+{
+    font-size: 20px;
+}
+
+table.mainContainerTable tbody
+{
+    font-size: 18px;
+}
+
+#footer
+{
+   opacity: 0.0;
+   transition: opacity 0.3s;
+   transition-timing-function: linear;
+   height: 40px;
+   color: white;
+   background-color: #282f39; 
+   background: #282f39; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left top, #282f39, #96a3b6); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(bottom right, #282f39, #96a3b6); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(bottom right, #282f39, #96a3b6); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to bottom right, #282f39, #96a3b6); /* Standard syntax */
+}
+
+.footerBoxContainer
+{
+   display: none;
+   width: 180px;
+   height: 40px; 
+   float: left;
+   padding-left: 0px;
+   padding-right: 0px;
+}
+
+#footerNotifContainer
+{
+   display: none;
+   width: 200px;
+   height: 40px; 
+   float: left;
+   padding-left: 0px;
+   padding-right: 0px;
+}
+
+.footerUsrIcon
+{
+   width: 40px;
+   height: 100%;
+}
+
+#footerNotifBtnContainer
+{
+   width: 60px;
+   height: 100%;
+}
+
+.footerUsrIcon img
+{
+   width: 100%;
+   height: 100%;
+}
+
+.footerUsrIcon img.app
+{
+   width: 85%;
+   height: 85%;
+}
+
+.footerUsrText
+{
+   width: 140px;
+   height: 100%;
+   font-size: 14px;
+}
+
+.footerUsrIcon, .footerUsrText, #footerNotifBtnContainer
+{
+   float: left;
+   display: flex; 
+   justify-content: flex-start; 
+   align-items: center; 
+}
+
+#footerNotifTxt
+{
+   padding-left: 5px;
+}
+
+#logoutBtn:hover
+{
+   background: #ffcc00; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #ffcc00, #ffe680); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #ffcc00, #ffe680); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #ffcc00, #ffe680); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #ffcc00, #ffe680); /* Standard syntax */   
+   cursor: pointer;
+   color: black;
+}
+
+#footerBoxLastContainer
+{
+   width: 100%;
+   float: left;
+   height: 40px;
+   font-size: 16px;
+   display: flex; 
+   justify-content: flex-end; 
+   align-items: center; 
+}
+
+.container-fluid, #loggedUserDiv .col-sm-9, #loggedUserDiv .col-sm-3, #mainMenu .col-sm-1, #appHeader .col-sm-8, #appHeader .col-sm-2 
+{
+   padding-left: 0px;
+   padding-right: 0px;
+}
+
+div.modal-header
+{
+   background: #282f39; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(top, #282f39, #96a3b6); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(bottom, #282f39, #96a3b6); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(bottom, #282f39, #96a3b6); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to bottom, #282f39, #96a3b6); /* Standard syntax */
+   text-align: center;
+   color: white;
+   border-bottom: none;
+}
+
+div.modal-header h5.modal-title
+{
+   font-size: 24px;
+   font-family: RalewayBold;
+}
+
+.modal-body
+{
+   /*font-family: Aller;*/
+   padding-top: 0px;
+}
+
+.modalBodyInnerDiv
+{
+   height: auto;
+   width: 100%;
+   display: flex;
+   align-items: center; 
+   justify-content: center;
+   text-align: center;
+}
+
+#newEventsPopup
+{
+   width: 420px;
+   height: 200px;
+   z-index: 999999;
+   position: fixed;
+   transition: top 0.7s;
+   transition-timing-function: linear;
+   /*border-left: 1px solid #282f39;*/
+}
+
+#newEventsPopupHeader
+{
+   width: 100%;
+   height: 40px;
+   float: left;
+   background: #282f39; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left top, #282f39, #96a3b6); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(bottom right, #282f39, #96a3b6); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(bottom right, #282f39, #96a3b6); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to bottom right, #282f39, #96a3b6); /* Standard syntax */
+   color: white;
+}
+
+#newEventsPopupBody
+{
+   width: 100%;
+   height: 160px;
+   float: left;
+   background-color: white;
+   opacity: 1.0;
+}
+
+#newEventsPopupBodyHeader
+{
+   width: 100%;
+   height: 20px;
+}
+
+.newEventsPopupBodyHeaderCell
+{
+   float: left;
+   width: 140px;
+   height: 100%;
+   background: #058494; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #058494, #07afc5); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #058494, #07afc5); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #058494, #07afc5); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #058494, #07afc5); /* Standard syntax */   
+   color: white;
+}
+
+#newEventsPopupBodyContent
+{
+   width: 100%;
+   height: 140px;
+   background-color: white;
+   opacity: 1.0;
+}
+
+.newEventsPopupBodyRow
+{
+   float: left;
+   width: 100%;
+   height: 28px;
+   background-color: white;
+   opacity: 1.0;
+}
+
+.newEventsPopupBodyCellOdd
+{
+   float: left;
+   width: 140px;
+   height: 100%;
+   background-color: white;
+   opacity: 1.0;
+}
+
+.newEventsPopupBodyCellEven
+{
+   float: left;
+   width: 140px;
+   height: 100%;
+   opacity: 1.0;
+   background: #cef7fd; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(left, #cef7fd, #e7fbfe); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(right, #cef7fd, #e7fbfe); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(right, #cef7fd, #e7fbfe); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to right, #cef7fd, #e7fbfe); /* Standard syntax */ 
+}
+
+.newEventsLogTableRow
+{
+   font-weight: bold;
+   background: #cef7fd; /* For browsers that do not support gradients */
+   background: -webkit-linear-gradient(top, #cef7fd, #e7fbfe); /* For Safari 5.1 to 6.0 */
+   background: -o-linear-gradient(bottom, #cef7fd, #e7fbfe); /* For Opera 11.1 to 12.0 */
+   background: -moz-linear-gradient(bottom, #cef7fd, #e7fbfe); /* For Firefox 3.6 to 15 */
+   background: linear-gradient(to bottom, #cef7fd, #e7fbfe); /* Standard syntax */ 
+   transition: all 0.7s;
+   transition-timing-function: linear;
+}
