@@ -55,9 +55,9 @@ class RestController
    }
    
    //Business methods
-   public static function checkLdapMembership($connection, $userDn, $tool) 
+   public static function checkLdapMembership($connection, $userDn, $tool, $baseDn) 
    {
-      $result = ldap_search($connection, 'dc=ldap,dc=disit,dc=org', '(&(objectClass=posixGroup)(memberUid=' . $userDn . '))');
+      $result = ldap_search($connection, $baseDn, '(&(objectClass=posixGroup)(memberUid=' . $userDn . '))');
       $entries = ldap_get_entries($connection, $result);
       foreach ($entries as $key => $value) 
       {
@@ -73,9 +73,9 @@ class RestController
    }
    
 
-   public static function checkLdapRole($connection, $userDn, $role) 
+   public static function checkLdapRole($connection, $userDn, $role, $baseDn) 
    {
-      $result = ldap_search($connection, 'dc=ldap,dc=disit,dc=org', '(&(objectClass=organizationalRole)(cn=' . $role . ')(roleOccupant=' . $userDn . '))');
+      $result = ldap_search($connection, $baseDn, '(&(objectClass=organizationalRole)(cn=' . $role . ')(roleOccupant=' . $userDn . '))');
       $entries = ldap_get_entries($connection, $result);
       foreach ($entries as $key => $value) 
       {
@@ -107,11 +107,11 @@ class RestController
       $this->conf = parse_ini_file("./conf/conf.ini");
       $this->link = mysqli_connect($this->conf["dbHost"], $this->conf["dbUsr"], $this->conf["dbPwd"]);
       $appName = mysqli_real_escape_string($this->link, $appName);
-      $appUsr = mysqli_real_escape_string($this->link, $appUsr);
+      $appUsr = urldecode(mysqli_real_escape_string($this->link, $appUsr));
       $url = mysqli_real_escape_string($this->link, $url);
       $generatorOriginalName = mysqli_real_escape_string($this->link, $generatorOriginalName);
       $generatorOriginalType = mysqli_real_escape_string($this->link, $generatorOriginalType);
-      $containerName = mysqli_real_escape_string($this->link, $containerName);
+      $containerName = urldecode(mysqli_real_escape_string($this->link, $containerName));
       
       if(!$this->link)
       {
@@ -200,18 +200,19 @@ class RestController
          {
             $row = mysqli_fetch_assoc($rs);
             $genId = $row['id'];
-            
-            $query2 = "INSERT INTO " . $dbName . ".events (genId, eventType, thrCnt, val) VALUES ('$genId', '$eventType', '$thrCnt', 1) ON DUPLICATE KEY UPDATE val = 1";
-            $rs2 = mysqli_query($this->link, $query2);
-            
-            if($rs2)
-            {
-               return "Ok";
+            if ($row != null) {
+                $query2 = "INSERT INTO " . $dbName . ".events (genId, eventType, thrCnt, val) VALUES ('$genId', '$eventType', '$thrCnt', 1) ON DUPLICATE KEY UPDATE val = 1";
+                $rs2 = mysqli_query($this->link, $query2);
+
+                if($rs2)
+                {
+                   return "Ok";
+                }
+                else
+                {
+                   return "queryKo";
+                } 
             }
-            else
-            {
-               return "queryKo";
-            }   
          }
          else
          {
@@ -422,23 +423,28 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                            $bind = @ldap_bind($ds);
                            if($ds && $bind)
                            {
-                                if($this->checkLdapMembership($ds, $ldapUsername, $appLdapName))
+                                if($this->checkLdapMembership($ds, $ldapUsername, $appLdapName, $baseDn))
                                 {
-                                   if($this->checkLdapRole($ds, $ldapUsername, "ToolAdmin"))
+                                   if($this->checkLdapRole($ds, $ldapUsername, "RootAdmin", $baseDn))
+                                   {
+                                      $results["usrOrigin"] = "ldap";
+                                      $results["usrRole"] = "RootAdmin";
+                                   }
+                                   else if($this->checkLdapRole($ds, $ldapUsername, "ToolAdmin", $baseDn))
                                    {
                                       $results["usrOrigin"] = "ldap";
                                       $results["usrRole"] = "ToolAdmin";
                                    }
                                    else
                                    {
-                                       if($this->checkLdapRole($ds, $ldapUsername, "AreaManager"))
+                                       if($this->checkLdapRole($ds, $ldapUsername, "AreaManager", $baseDn))
                                        {
                                           $results["usrOrigin"] = "ldap";
                                           $results["usrRole"] = "AreaManager";
                                        }
                                        else
                                        {
-                                          if($this->checkLdapRole($ds, $ldapUsername, "Manager"))
+                                          if($this->checkLdapRole($ds, $ldapUsername, "Manager", $baseDn))
                                           {
                                              $results["usrOrigin"] = "ldap";
                                              $results["usrRole"] = "Manager";
@@ -490,7 +496,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
    {
       $ldapNames = [];
       $result = [];
-      
+      $baseDn = "dc=ldap,dc=disit,dc=org";
       $dbHost = $this->conf["dbHost"];
       $dbUsr = $this->conf["dbUsr"];
       $dbPwd = $this->conf["dbPwd"];
@@ -573,9 +579,18 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
          {
             foreach($ldapNames as $key => $value) 
             {
-               if($this->checkLdapMembership($ds, $ldapUsername, $value[0]))
+               if($this->checkLdapMembership($ds, $ldapUsername, $value[0], $baseDn))
                {
-                  if($this->checkLdapRole($ds, $ldapUsername, "ToolAdmin"))
+                  if($this->checkLdapRole($ds, $ldapUsername, "RootAdmin", $baseDn))
+                  {
+                     $result["detail"] = "Ok";
+                     $result["usrApp"] = $value[1];
+                     $result["usrAppLdap"] = $value[0];
+                     $result["usrOrigin"] = "ldap";
+                     $result["usrRole"] = "RootAdmin";
+                     return $result;
+                  }
+                  else if($this->checkLdapRole($ds, $ldapUsername, "ToolAdmin", $baseDn))
                   {
                      $result["detail"] = "Ok";
                      $result["usrApp"] = $value[1];
@@ -586,7 +601,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                   }
                   else
                   {
-                      if($this->checkLdapRole($ds, $ldapUsername, "AreaManager"))
+                      if($this->checkLdapRole($ds, $ldapUsername, "AreaManager", $baseDn))
                       {
                          $result["detail"] = "Ok";
                          $result["usrApp"] = $value[1];
@@ -597,7 +612,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                       }
                       else
                       {
-                         if($this->checkLdapRole($ds, $ldapUsername, "Manager"))
+                         if($this->checkLdapRole($ds, $ldapUsername, "Manager", $baseDn))
                          {
                             $result["detail"] = "Ok";
                             $result["usrApp"] = $value[1];
@@ -1152,7 +1167,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
             
             $usrApp = $_SESSION['loginApp'];
             
-            if($usrRole == "ToolAdmin")
+            if($usrRole == "ToolAdmin" || $usrRole == "RootAdmin")
             {
                $query = "SELECT * FROM " . $this->conf["dbName"] . ".clientApplications";
             }
@@ -1172,7 +1187,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                   $ldapName = $row['ldapName'];
                   $generators[$ldapName] = [];
                   
-                  if($usrRole == "ToolAdmin")
+                  if($usrRole == "ToolAdmin" || $usrRole == "RootAdmin")
                   {
                      $query2 = "SELECT * FROM " . $this->conf["dbName"] . ".eventGenerators WHERE eventGenerators.appName = '$appName' AND eventGenerators.val = 1 ORDER BY eventGenerators.id ASC";
                   }
@@ -1794,6 +1809,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
       $eventTime = mysqli_real_escape_string($this->link, $eventTime);
       $value = mysqli_real_escape_string($this->link, $value);
       $furtherDetails = mysqli_real_escape_string($this->link, $furtherDetails);
+      $generatorOriginalName = html_entity_decode($generatorOriginalName, ENT_HTML5);
 
       if(!$this->link)
       {
@@ -1810,7 +1826,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                   "LEFT JOIN " . $this->conf["dbName"] . ".eventGenerators AS gen " .
                   "ON evt.genId = gen.id " .
                   "WHERE evt.eventType = '$eventType' AND gen.appName = '$appName' AND gen.generatorOriginalName = '$generatorOriginalName' AND gen.generatorOriginalType = '$generatorOriginalType' AND gen.containerName = '$containerName' AND gen.val = 1";
-         
+
          $rs = mysqli_query($this->link, $query); 
 
          if($rs)
@@ -1991,9 +2007,11 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                                if($this->conf["smtpAuth"] == "true")
                                {
                                   $mailer->SMTPAuth = true;
-                               }
-                               else
-                               {
+                                  $mailer->SMTPSecure = $this->conf["smtpSecure"];
+                                  $mailer->Port = $this->conf["smtpPort"]; 
+                                  $mailer->Username = $this->conf["smtpUser"];
+                                  $mailer->Password = $this->conf["smtpPassword"];
+                               } else {
                                   $mailer->SMTPAuth = false;                        
                                }
                                $mailer->From = $this->conf["emailFromAddress"];
@@ -2142,7 +2160,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
          
          $username = $_SESSION['loginUsr'];
          
-         if($_SESSION['usrRole'] == "ToolAdmin")
+         if($_SESSION['usrRole'] == "ToolAdmin" || $_SESSION['usrRole'] == "RootAdmin")
          {
             if($appName != "All")
             {
@@ -2291,7 +2309,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
       }  
    }
    
-   function setGeneratorValidity($appName, $generatorOriginalName, $generatorNewName, $generatorOriginalType, $containerName, $validity/*, $setEventsValidityTrue*/)
+   function setGeneratorValidity($appName, $generatorOriginalName, $generatorNewName, $generatorOriginalType, $containerName, $validity, $containerUrl, $appUsr/*, $setEventsValidityTrue*/)
    {
       $this->conf = parse_ini_file("./conf/conf.ini");
       $this->link = mysqli_connect($this->conf["dbHost"], $this->conf["dbUsr"], $this->conf["dbPwd"]);
@@ -2323,7 +2341,24 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
          
          if($rs1)
          {
-            return "Ok";
+            while($row != mysqli_fetch_assoc($rs1))
+            {
+                return "Ok";
+            }
+            
+            // REGISTRA NEW EVENTGENERATOR AUTOMATIC REPAIR GP
+        //    RestController::repairEventGenerator($appName, $appUsr, $containerUrl, $generatorNewName, $generatorOriginalType, $containerName, $generatorNewName, $validity); // CTR QUESTA ISTRUZIONE SE REGISTRA OK NEW egentGenerator
+         //   $this->conf = parse_ini_file("./conf/conf.ini");
+
+        /*    $query2 = "UPDATE " . $this->conf["dbName"] . ".eventGenerators " . 
+                   "SET eventGenerators.val = $validity, eventGenerators.generatorOriginalName = '" . $generatorNewName . "' " .
+                   "WHERE eventGenerators.appName = '$appName' AND eventGenerators.generatorOriginalName = '$generatorOriginalName' AND eventGenerators.generatorOriginalType = '$generatorOriginalType' AND eventGenerators.containerName = '$containerName'";
+         
+            $rs2 = mysqli_query($this->link, $query2);
+         
+            if($rs2) {
+                return "Ok";
+            }   */
             /*$query2 = "UPDATE " . $this->conf["dbName"] . ".emailNotifications " .
                       "SET emailNotifications.val = $validity " .
                       "WHERE emailNotifications.genId = (SELECT eventGenerators.id FROM " . $this->conf["dbName"] . ".eventGenerators WHERE eventGenerators.appName = '$appName' AND eventGenerators.generatorOriginalName = '$generatorNewName' AND eventGenerators.generatorOriginalType = '$generatorOriginalType' AND eventGenerators.containerName = '$containerName')";
@@ -2361,6 +2396,80 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
             return "queryKo";
          }  
       }
+   }
+   
+    function repairEventGenerator($appName, $appUsr, $url, $generatorOriginalName, $generatorOriginalType, $containerName, $generatorNewName, $validity) {
+        $this->link = mysqli_connect($this->conf["dbHost"], $this->conf["dbUsr"], $this->conf["dbPwd"]);
+        $appName = mysqli_real_escape_string($this->link, $appName);
+        $appUsr = mysqli_real_escape_string($this->link, $appUsr);
+     //   $url = mysqli_real_escape_string($containerName);
+        $generatorOriginalName = mysqli_real_escape_string($this->link, $generatorOriginalName);
+        $generatorOriginalType = mysqli_real_escape_string($this->link, $generatorOriginalType);
+        $containerName = mysqli_real_escape_string($this->link, $containerName);
+
+        if(!$this->link)
+        {
+           return "dbConnectionKo";
+        }
+        else 
+        {
+           mysqli_set_charset($this->link, 'utf8');
+           mysqli_select_db($this->link, $this->conf["dbName"]);
+
+           //Controlliamo se è già presente
+           $query0 = "SELECT count(*) AS isPresent FROM " . $this->conf["dbName"] . ".eventGenerators WHERE eventGenerators.appName = '" . $appName . "' AND appUsr = '" . $appUsr . "' AND generatorOriginalName = '" . $generatorOriginalName . "' AND generatorOriginalType = '" . $generatorOriginalType . "' AND containerName = '" . $containerName . "'";
+           $rs0 = mysqli_query($this->link, $query0);
+
+           if($rs0)
+           {
+              $row = mysqli_fetch_assoc($rs0);
+              $isPresent = $row['isPresent'];
+
+              if($isPresent > 0)
+              {
+                 $query1 = "UPDATE " . $this->conf["dbName"] . ".eventGenerators SET val = 1";
+                 $rs1 = mysqli_query($this->link, $query1);
+
+                 if($rs1)
+                 {
+                    return "Ok";
+                 }
+                 else
+                 {
+                    return "queryKo";
+                 } 
+              }
+              else
+              {
+                $query1 = "INSERT INTO " . $this->conf["dbName"] . ".eventGenerators (appName, generatorOriginalName, generatorOriginalType, appUsr, url, containerName) " .
+                   "VALUES ('$appName', '$generatorOriginalName', '$generatorOriginalType', '$appUsr', '$url', '$containerName')";
+
+                $rs1 = mysqli_query($this->link, $query1);
+
+                if($rs1)
+                {
+                //   return "Ok";
+                }
+                else
+                {
+                //   return "queryKo";
+                } 
+              }
+               $query2 = "UPDATE " . $this->conf["dbName"] . ".eventGenerators " . 
+                  "SET eventGenerators.val = $validity, eventGenerators.generatorOriginalName = '" . $generatorNewName . "' " .
+                  "WHERE eventGenerators.appName = '$appName' AND eventGenerators.generatorOriginalName = '$generatorOriginalName' AND eventGenerators.generatorOriginalType = '$generatorOriginalType' AND eventGenerators.containerName = '$containerName'";
+
+               $rs2 = mysqli_query($this->link, $query2);
+
+               if($rs2) {
+                   return "Ok";
+               } 
+           }
+           else
+           {
+              return "queryKo";
+           } 
+        }
    }
    
    function setEventValidity($appName, $generatorOriginalName, $generatorOriginalType, $containerName, $eventType, $validity)
@@ -2681,7 +2790,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
       $appName = mysqli_real_escape_string($this->link, $appName);
       $generatorOriginalName = mysqli_real_escape_string($this->link, $generatorOriginalName);
       $generatorOriginalType = mysqli_real_escape_string($this->link, $generatorOriginalType);
-      $containerName = mysqli_real_escape_string($this->link, $containerName);
+      $containerName = urldecode(mysqli_real_escape_string($this->link, $containerName));
       
       if(!$this->link)
       {
@@ -2738,7 +2847,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                $usrRole = $_SESSION['usrRole'];
                $username = $_SESSION['loginUsr'];
                
-               if($usrRole == "ToolAdmin")
+               if($usrRole == "ToolAdmin" || $usrRole == "RootAdmin")
                {
                   $query = "SELECT events.id AS id, events.time AS eventTime, evtTypes.eventType AS eventType, " .
                            "generators.appName AS appName, generators.appUsr AS appUsr, generators.generatorOriginalName AS genName, " . 
@@ -2807,7 +2916,7 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                $usrRole = $_SESSION['usrRole'];
                $username = $_SESSION['loginUsr'];
                
-               if($usrRole == "ToolAdmin")
+               if($usrRole == "ToolAdmin" || $usrRole == "RootAdmin")
                {
                   $query = "SELECT events.id AS id, events.time AS eventTime, evtTypes.eventType AS eventType, " .
                            "generators.appName AS appName, generators.appUsr AS appUsr, generators.generatorOriginalName AS genName, " . 
@@ -2896,7 +3005,8 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
       
       if(!$this->link)
       {
-         return "dbConnectionKo";
+         $response['detail'] = "dbConnectionKo";
+         return $response;
       }
       else 
       {
@@ -2905,17 +3015,49 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
 
          if($r)
          {
-            return "Ok";
+            $response = "Ok"; 
+            return $response;
          }
          else
          {
-            return "queryKo";
+            $response = "queryKo";
+            return $response;
          }  
       }
    }
    
    
-   
+   function updateGeneratorName($appName, $oldGeneratorName, $newGeneratorName, $containerName)
+   {
+      $this->conf = parse_ini_file("./conf/conf.ini");
+      $this->link = mysqli_connect($this->conf["dbHost"], $this->conf["dbUsr"], $this->conf["dbPwd"]);
+      $response = [];
+      $appName = mysqli_real_escape_string($this->link, $appName);
+      $oldGeneratorName = mysqli_real_escape_string($this->link, $oldGeneratorName);
+      $newGeneratorName = mysqli_real_escape_string($this->link, $newGeneratorName);
+      
+      if(!$this->link)
+      {
+         $response['detail'] = "dbConnectionKo";
+       //  return $response;
+      }
+      else 
+      {
+         $q = "UPDATE " . $this->conf["dbName"] . ".eventGenerators SET generatorOriginalName = '$newGeneratorName' WHERE generatorOriginalName = '$oldGeneratorName' AND appName = '$appName' AND containerName = '$containerName'";
+         $r = mysqli_query($this->link, $q);
+
+         if($r)
+         {
+            $response = "Ok"; 
+          //  return $response;
+         }
+         else
+         {
+            $response = "queryKo";
+          //  return $response;
+         }  
+      }
+   }
    
    
 }//Fine classe

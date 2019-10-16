@@ -176,6 +176,7 @@ if(isset($_REQUEST['apiUsr']))
                         $tkn=$oidc->refreshToken($_SESSION['refreshToken']); 
                         //Dev'essere assoluto, visto con Piero
                         $oidc->signOut($tkn->access_token, "https://notificator.snap4city.org/notificator/ssoLogin.php");                        
+                     //   $oidc->signOut($tkn->access_token, "http://localhost/notificator/ssoLogin.php");                        
                      }
                      if(ini_get("session.use_cookies")) {
                         $params = session_get_cookie_params();
@@ -650,9 +651,9 @@ if(isset($_REQUEST['apiUsr']))
                        {
                           $response["result"] = $restController->setGeneratorValidity($_REQUEST['appName'], $_REQUEST["generatorOriginalName"], $_REQUEST["generatorNewName"], $_REQUEST["generatorOriginalType"], $_REQUEST["containerName"], $_REQUEST["validity"], $_REQUEST["setEventsValidityTrue"]);
                        }*/
-                       if(isset($_REQUEST['appName'])&&isset($_REQUEST["generatorOriginalName"])&&isset($_REQUEST["generatorNewName"])&&isset($_REQUEST["generatorOriginalType"])&&isset($_REQUEST["containerName"])&&isset($_REQUEST["validity"]))
+                       if(isset($_REQUEST['appName'])&&isset($_REQUEST["generatorOriginalName"])&&isset($_REQUEST["generatorNewName"])&&isset($_REQUEST["generatorOriginalType"])&&isset($_REQUEST["containerName"])&&isset($_REQUEST["validity"])&&isset($_REQUEST['url'])&&isset($_REQUEST["appUsr"]))
                        {
-                          $response["result"] = $restController->setGeneratorValidity($_REQUEST['appName'], $_REQUEST["generatorOriginalName"], $_REQUEST["generatorNewName"], $_REQUEST["generatorOriginalType"], $_REQUEST["containerName"], $_REQUEST["validity"]);
+                          $response["result"] = $restController->setGeneratorValidity($_REQUEST['appName'], $_REQUEST["generatorOriginalName"], $_REQUEST["generatorNewName"], $_REQUEST["generatorOriginalType"], $_REQUEST["containerName"], $_REQUEST["validity"], $_REQUEST['url'], $_REQUEST["appUsr"]);
                        }
                        else
                        {
@@ -714,6 +715,17 @@ if(isset($_REQUEST['apiUsr']))
                           $response["result"] = "missingParams";
                        }
                        break;    
+                    
+                    case "updateGeneratorName":
+                       if(isset($_REQUEST['appName'])&&isset($_REQUEST["oldGeneratorName"])&&isset($_REQUEST["newGeneratorName"])&&isset($_REQUEST["containerName"]))
+                       {
+                          $response["result"] = $restController->updateGeneratorName($_REQUEST['appName'], $_REQUEST["oldGeneratorName"], $_REQUEST["newGeneratorName"], $_REQUEST["containerName"]);
+                       }
+                       else
+                       {
+                          $response["result"] = "missingParams";
+                       }
+                       break;
               }
             }
             else 

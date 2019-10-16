@@ -21,26 +21,37 @@
   $conf = parse_ini_file("./conf/conf.ini");
   $ldapServer = $conf["ldapServer"];
   $ldapPort = $conf["ldapPort"];
-   
+  $ldapBaseDN = $conf["ldapBaseDN"];
+  
+  $ssoCliendId = $conf["ssoCliendId"];
+  $ssoClientSecret = $conf["ssoClientSecret"];
+  $ssoEndpoint = $conf["ssoEndpoint"];
+  $ssoAuthorizationEndpoint = $conf["ssoAuthorizationEndpoint"];
+  $ssoTokenEndpoint = $conf["ssoTokenEndpoint"];
+  $ssoUserinfoEndpoint = $conf["ssoUserinfoEndpoint"];
+  $ssoJwksUri = $conf["ssoJwksUri"];
+  $ssoIssuer = $conf["ssoIssuer"];
+  $ssoEndSessionEndpoint = $conf["ssoEndSessionEndpoint"];
+  $appUrl = $conf["appUrl"];
+  
   $ldapRole = null;
   $ldapOk = false;
-  $appUrl = "https://notificator.snap4city.org/notificator";
    
   $oidc = new OpenIDConnectClient(
-        'https://www.snap4city.org',
-        'php-notificator',
-        '...secret...'
+        $ssoEndpoint,
+        $ssoCliendId,
+        $ssoClientSecret
     );
 
     $oidc->setVerifyHost(false);
     $oidc->setVerifyPeer(false);
 
-    $oidc->providerConfigParam(array('authorization_endpoint'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/auth'));
-    $oidc->providerConfigParam(array('token_endpoint'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/token'));
-    $oidc->providerConfigParam(array('userinfo_endpoint'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/userinfo'));
-    $oidc->providerConfigParam(array('jwks_uri'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/certs'));
-    $oidc->providerConfigParam(array('issuer'=>'https://www.snap4city.org/auth/realms/master'));
-    $oidc->providerConfigParam(array('end_session_endpoint'=>'https://www.snap4city.org/auth/realms/master/protocol/openid-connect/logout'));
+    $oidc->providerConfigParam(array('authorization_endpoint'=>$ssoAuthorizationEndpoint));
+    $oidc->providerConfigParam(array('token_endpoint'=>$ssoTokenEndpoint));
+    $oidc->providerConfigParam(array('userinfo_endpoint'=>$ssoUserinfoEndpoint));
+    $oidc->providerConfigParam(array('jwks_uri'=>$ssoJwksUri));
+    $oidc->providerConfigParam(array('issuer'=>$ssoIssuer));
+    $oidc->providerConfigParam(array('end_session_endpoint'=>$ssoEndSessionEndpoint));
 
     $oidc->addScope(array('openid','username','profile'));
     $oidc->setRedirectURL($appUrl . '/ssoLogin.php');
@@ -48,11 +59,12 @@
       $oidc->authenticate();
     } catch(Exception $ex) {
       header("Location: ssoLogin.php?exception");
+   //     echo $ex;
     }
 
     //Appena Piero te lo dice, cambia il campo reperito in "username"
     $username = $oidc->requestUserInfo('username');
-    $ldapUsername = "cn=". $username . ",dc=ldap,dc=disit,dc=org";
+    $ldapUsername = "cn=". $username . ",$ldapBaseDN";
 
     $ds = ldap_connect($ldapServer, $ldapPort);
     ldap_set_option($ds, LDAP_OPT_PROTOCOL_VERSION, 3);
@@ -60,25 +72,25 @@
 
     if($ds && $bind)
     {
-        if(RestController::checkLdapMembership($ds, $ldapUsername, "Dashboard"))
+        if(RestController::checkLdapMembership($ds, $ldapUsername, "Dashboard", $ldapBaseDN))
         {
-           if(RestController::checkLdapRole($ds, $ldapUsername, "RootAdmin")) {
+           if(RestController::checkLdapRole($ds, $ldapUsername, "RootAdmin", $ldapBaseDN)) {
               $ldapRole = "RootAdmin";
               $ldapOk = true;
-           } else if(RestController::checkLdapRole($ds, $ldapUsername, "ToolAdmin")) {
+           } else if(RestController::checkLdapRole($ds, $ldapUsername, "ToolAdmin", $ldapBaseDN)) {
               $ldapRole = "ToolAdmin";
               $ldapOk = true;
-           } else if(RestController::checkLdapRole($ds, $ldapUsername, "AreaManager")) {
+           } else if(RestController::checkLdapRole($ds, $ldapUsername, "AreaManager", $ldapBaseDN)) {
               $ldapRole = "AreaManager";
               $ldapOk = true;
-           } else if(RestController::checkLdapRole($ds, $ldapUsername, "Manager")) {
+           } else if(RestController::checkLdapRole($ds, $ldapUsername, "Manager", $ldapBaseDN)) {
               $ldapRole = "Manager";
               $ldapOk = true;
            } else {
-              $msg="no role";
+              $msg="$ldapUsername no role";
            }
         } else {
-          $msg="no group";
+          $msg="$ldapUsername not in group";
         }
     } else {
       $msg="no bind to LDAP";
@@ -116,5 +128,6 @@
       session_destroy();
 
       //Dev'essere assoluto, visto con Piero
-      $oidc->signOut($oidc->getAccessToken(), $appUrl . "/ssoLogin.php?msg=".$msg);
+      //$oidc->signOut($oidc->getAccessToken(), $appUrl . "/ssoLogin.php?msg=".$msg);
+      echo $msg;
     }
