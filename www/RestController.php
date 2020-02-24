@@ -2101,30 +2101,37 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
                                if(!$mailer->send()) 
                                { 
                                   $results[$notId] = "Ko";
+                                  error_log("sendEmails: FAILED SEND EMAIL $appName  $generatorName");
                                } 
                                else 
                                {
                                   $results[$notId] = "Ok";
+                                  error_log("sendEmails: email sent $appName  $generatorName");
                                }
                             }
                             else
                             {
                                $results[$notId] = "QueryKo";
+                               error_log("sendEmails: failed query rs3 $query3");
                             }
                        }
                        else
                        {
                           $results[$notId] = "NotificationNotActive";
+                          error_log("sendEmails: NOTIFICATION NOT ACTIVE $appName  $generatorName");
+
                        }
                     }
                     else
                     {
                        $results[$notId] = "noRecipientsForThisNotification";
+                       error_log("sendEmails: NO RECIPIENTS $query2");
                     }
                  }
                  else
                  {
                     $results[$notId] = "queryKo";
+                    error_log("sendEmails: failed query rs2 $query2");
                  }
               }
               
@@ -2132,11 +2139,13 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
            }
            else
            {
+              error_log("sendEmails: NO NOTIFICATIONS FOR EVENT $query1");
               return "noNotificationsForThisEvent";
            }
         }
         else
         {
+           error_log("sendEmails: failed query rs1 $query1");
            return "queryKo";
         }
       }
