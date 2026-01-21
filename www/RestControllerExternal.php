@@ -20,6 +20,17 @@ class RestControllerExternal
 {
    private $link;
    private $conf;
+
+   private static function bindParams($stmt, $types, $params)
+   {
+      $bind = [];
+      $bind[] = $types;
+      foreach ($params as $key => $value)
+      {
+         $bind[] = &$params[$key];
+      }
+      return call_user_func_array([$stmt, 'bind_param'], $bind);
+   }
    
    //Constructor
    function __construct() 
@@ -104,29 +115,47 @@ class RestControllerExternal
          
          //$file = fopen("C:\dashboardLog.txt", "w");
          
-         $q1 = "SELECT id AS generatorId, generatorOriginalName AS widgetTitle, generatorOriginalType AS metricName, appUsr AS user FROM " . $this->conf["dbName"] . ".eventGenerators WHERE appName = 'Dashboard Manager' AND containerName = '$dashboardTitle' AND val = 1"; 
+         $q1 = "SELECT id AS generatorId, generatorOriginalName AS widgetTitle, generatorOriginalType AS metricName, appUsr AS user FROM " . $this->conf["dbName"] . ".eventGenerators WHERE appName = 'Dashboard Manager' AND containerName = ? AND val = 1"; 
          //fwrite($file, "Q1: " . $q1 . "\n");
-         $rs1 = mysqli_query($this->link, $q1); 
+         $stmt1 = mysqli_prepare($this->link, $q1);
+         if($stmt1)
+         {
+            mysqli_stmt_bind_param($stmt1, "s", $dashboardTitle);
+            mysqli_stmt_execute($stmt1);
+         }
          
-         if($rs1)
+         if($stmt1)
          {
             $result['data'] = [];
             $result['detail'] = "Ok";
             
-            while($row1 = mysqli_fetch_assoc($rs1))
+            mysqli_stmt_bind_result($stmt1, $genId, $widgetTitle, $metricName, $appUsr);
+            while(mysqli_stmt_fetch($stmt1))
             {
-               $genId = $row1['generatorId']; 
-               $q2 = "SELECT eventType FROM " . $this->conf["dbName"] . ".events WHERE genId = $genId"; 
+               $row1 = [
+                  'generatorId' => $genId,
+                  'widgetTitle' => $widgetTitle,
+                  'metricName' => $metricName,
+                  'user' => $appUsr,
+               ];
+               $q2 = "SELECT eventType FROM " . $this->conf["dbName"] . ".events WHERE genId = ?"; 
                //fwrite($file, "Q2: " . $q2 . "\n");
-               $rs2 = mysqli_query($this->link, $q2);
-               
-               if($rs2)
+               $stmt2 = mysqli_prepare($this->link, $q2);
+               if($stmt2)
+               {
+                  mysqli_stmt_bind_param($stmt2, "i", $genId);
+                  mysqli_stmt_execute($stmt2);
+               }
+                
+               if($stmt2)
                {
                    $row1['eventTypes'] = [];
-                   while($row2 = mysqli_fetch_assoc($rs2))
+                   mysqli_stmt_bind_result($stmt2, $eventType);
+                   while(mysqli_stmt_fetch($stmt2))
                    {
-                       array_push($row1['eventTypes'], $row2['eventType']);
+                       $row1['eventTypes'][] = $eventType;
                    }
+                   mysqli_stmt_close($stmt2);
                }
                else
                {
@@ -177,34 +206,68 @@ class RestControllerExternal
                      "ON events.eventTypeId = evtTypes.id " .
                      "LEFT JOIN " . $this->conf["dbName"] . ".eventGenerators AS generators " .
                      "ON evtTypes.genId = generators.id " .
-                     "WHERE STR_TO_DATE(events.time,'%Y-%m-%d %H:%i:%s') >= STR_TO_DATE('$startDate','%Y-%m-%d %H:%i:%s') AND STR_TO_DATE(events.time,'%Y-%m-%d %H:%i:%s') <= STR_TO_DATE('$endDate','%Y-%m-%d %H:%i:%s') " .
+                     "WHERE STR_TO_DATE(events.time,'%Y-%m-%d %H:%i:%s') >= STR_TO_DATE(?,'%Y-%m-%d %H:%i:%s') AND STR_TO_DATE(events.time,'%Y-%m-%d %H:%i:%s') <= STR_TO_DATE(?,'%Y-%m-%d %H:%i:%s') " .
                      "AND generators.appName = 'Dashboard Manager' ";
+            $types = "ss";
+            $params = [$startDate, $endDate];
 
             if($dashboardTitle != null)
             {
-                $query = $query . "AND generators.containerName LIKE '%$dashboardTitle%' ";
+                $query = $query . "AND generators.containerName LIKE ? ";
+                $types .= "s";
+                $params[] = "%" . $dashboardTitle . "%";
             }
             
             if($widgetTitle != null)
             {
-                $query = $query . "AND generators.generatorOriginalName LIKE '%$widgetTitle%' ";
+                $query = $query . "AND generators.generatorOriginalName LIKE ? ";
+                $types .= "s";
+                $params[] = "%" . $widgetTitle . "%";
             }
             
             //$query = $query . "AND generators.containerName LIKE '%$dashboardTitle%')||(generators.generatorOriginalName LIKE '%$searchText%')||(generators.generatorOriginalType LIKE '%$searchText%')||(generators.appUsr LIKE '%$searchText%')||(evtTypes.eventType LIKE '%$searchText%')) ";
            
             $query = $query . "ORDER BY STR_TO_DATE(events.time,'%Y-%m-%d %H:%i:%s') DESC";
             
-            $rs = mysqli_query($this->link, $query); 
+            $stmt = mysqli_prepare($this->link, $query);
+            if($stmt)
+            {
+               self::bindParams($stmt, $types, $params);
+               mysqli_stmt_execute($stmt);
+            }
 
-            if($rs)
+            if($stmt)
             {
                 $result['data'] = [];
                 $result['detail'] = "Ok";
 
-                while($row = mysqli_fetch_assoc($rs))
+                mysqli_stmt_bind_result(
+                   $stmt,
+                   $eventId,
+                   $eventTime,
+                   $eventType,
+                   $appName,
+                   $appUsr,
+                   $genName,
+                   $genType,
+                   $genContainer,
+                   $url
+                );
+                while(mysqli_stmt_fetch($stmt))
                 {
-                    array_push($result['data'], $row);
+                    $result['data'][] = [
+                       'id' => $eventId,
+                       'eventTime' => $eventTime,
+                       'eventType' => $eventType,
+                       'appName' => $appName,
+                       'appUsr' => $appUsr,
+                       'genName' => $genName,
+                       'genType' => $genType,
+                       'genContainer' => $genContainer,
+                       'url' => $url,
+                    ];
                 }
+                mysqli_stmt_close($stmt);
             }
             else
             {

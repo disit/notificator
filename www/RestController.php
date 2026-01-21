@@ -23,6 +23,19 @@ class RestController
    private $link;
    private $conf;
    
+   private static function escapeLdapFilterValue($value)
+   {
+      if(function_exists('ldap_escape'))
+      {
+         return ldap_escape($value, '', LDAP_ESCAPE_FILTER);
+      }
+      return str_replace(
+         ['\\', '*', '(', ')', "\0"],
+         ['\\5c', '\\2a', '\\28', '\\29', '\\00'],
+         $value
+      );
+   }
+   
    //Constructor
    function __construct() 
    {
@@ -57,13 +70,15 @@ class RestController
    //Business methods
    public static function checkLdapMembership($connection, $userDn, $tool, $baseDn) 
    {
-      $result = ldap_search($connection, $baseDn, '(&(objectClass=posixGroup)(memberUid=' . $userDn . '))');
+      $escapedUserDn = self::escapeLdapFilterValue($userDn);
+      $escapedTool = self::escapeLdapFilterValue($tool);
+      $result = ldap_search($connection, $baseDn, '(&(objectClass=posixGroup)(memberUid=' . $escapedUserDn . '))');
       $entries = ldap_get_entries($connection, $result);
       foreach ($entries as $key => $value) 
       {
          if(is_numeric($key)) 
          {
-            if($value["cn"]["0"] == $tool) 
+            if($value["cn"]["0"] == $escapedTool) 
             {
                return true;
             }
@@ -75,13 +90,15 @@ class RestController
 
    public static function checkLdapRole($connection, $userDn, $role, $baseDn) 
    {
-      $result = ldap_search($connection, $baseDn, '(&(objectClass=organizationalRole)(cn=' . $role . ')(roleOccupant=' . $userDn . '))');
+      $escapedUserDn = self::escapeLdapFilterValue($userDn);
+      $escapedRole = self::escapeLdapFilterValue($role);
+      $result = ldap_search($connection, $baseDn, '(&(objectClass=organizationalRole)(cn=' . $escapedRole . ')(roleOccupant=' . $escapedUserDn . '))');
       $entries = ldap_get_entries($connection, $result);
       foreach ($entries as $key => $value) 
       {
          if(is_numeric($key)) 
          {
-            if($value["cn"]["0"] == $role) 
+            if($value["cn"]["0"] == $escapedRole) 
             {
                return true;
             }
@@ -287,12 +304,19 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
       //$loginAuthJsonMd5 = $loginAuth;
       //fwrite($file, "MD5 received: " . $loginAuthJsonMd5);
       
-      $query = "SELECT count(*) AS quantity FROM " . $dbName . ".clientLoggedUsers WHERE userIp = '$userIp' AND usr = '$usr' AND clientApplication = '$clientApplication'";
-      $rs = mysqli_query($this->link, $query);
-      
-      if($rs)
+      $query = "SELECT count(*) AS quantity FROM " . $dbName . ".clientLoggedUsers WHERE userIp = ? AND usr = ? AND clientApplication = ?";
+      $stmt = mysqli_prepare($this->link, $query);
+      if($stmt)
       {
-         $row = $rs->fetch_assoc();
+         mysqli_stmt_bind_param($stmt, "sss", $userIp, $usr, $clientApplication);
+         mysqli_stmt_execute($stmt);
+      }
+      
+      if($stmt)
+      {
+         mysqli_stmt_bind_result($stmt, $quantity);
+         mysqli_stmt_fetch($stmt);
+         $row = ['quantity' => $quantity];
          
          if($row['quantity'] > 0)
          {
@@ -301,8 +325,17 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
          }
          else
          {
-            $query2 = "INSERT INTO " . $dbName . ".clientLoggedUsers VALUES('$usr', '$clientApplication', '$userIp', (UNIX_TIMESTAMP() + 60*(SELECT sessionLifetime FROM " . $dbName . ".clientApplications WHERE MD5(ldapName) = '$clientApplication')))";
-            $rs2 = mysqli_query($this->link, $query2);
+            $query2 = "INSERT INTO " . $dbName . ".clientLoggedUsers VALUES(?, ?, ?, (UNIX_TIMESTAMP() + 60*(SELECT sessionLifetime FROM " . $dbName . ".clientApplications WHERE MD5(ldapName) = ?)))";
+            $stmt2 = mysqli_prepare($this->link, $query2);
+            if($stmt2)
+            {
+               mysqli_stmt_bind_param($stmt2, "ssss", $usr, $clientApplication, $userIp, $clientApplication);
+               $rs2 = mysqli_stmt_execute($stmt2);
+            }
+            else
+            {
+               $rs2 = false;
+            }
 
             if($rs2)
             {
@@ -341,12 +374,41 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
       //$file = fopen("C:\dashboardLog.txt", "a");
       
       //Prima verifichiamo se è un'utenza locale
-      $query = "SELECT * FROM " . $dbName . ".eventGenerators WHERE MD5(CONCAT(appName, '|', generatorOriginalName, '|', containerName)) = '$showAlerts'";
-      $rs = mysqli_query($this->link, $query);
-      
-      if($rs)
+      $query = "SELECT id, appName, generatorOriginalName, generatorOriginalType, appUsr, url, containerName, val FROM " . $dbName . ".eventGenerators WHERE MD5(CONCAT(appName, '|', generatorOriginalName, '|', containerName)) = ?";
+      $stmt = mysqli_prepare($this->link, $query);
+      if($stmt)
       {
-          $row = $rs->fetch_assoc();
+         mysqli_stmt_bind_param($stmt, "s", $showAlerts);
+         mysqli_stmt_execute($stmt);
+      }
+      
+      if($stmt)
+      {
+          mysqli_stmt_bind_result(
+             $stmt,
+             $id,
+             $appName,
+             $generatorOriginalName,
+             $generatorOriginalType,
+             $appUsr,
+             $url,
+             $containerName,
+             $val
+          );
+          if(!mysqli_stmt_fetch($stmt))
+          {
+             return "queryKo";
+          }
+          $row = [
+             'id' => $id,
+             'appName' => $appName,
+             'generatorOriginalName' => $generatorOriginalName,
+             'generatorOriginalType' => $generatorOriginalType,
+             'appUsr' => $appUsr,
+             'url' => $url,
+             'containerName' => $containerName,
+             'val' => $val,
+          ];
           
           $results["detail"] = "Ok";
           $results["generatorId"] = $row['id'];
@@ -356,12 +418,36 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
           $results["usrApp"] = $row["appName"];
           
           //Repere delle applicazioni client dal DB locale
-          $query2 = "SELECT * FROM " . $dbName . ".clientApplications WHERE name = '$appName'";
-          $rs2 = mysqli_query($this->link, $query2);
-          
-          if($rs2)
+          $query2 = "SELECT id, name, ldapName, loginApiUrl, sessionLifetime FROM " . $dbName . ".clientApplications WHERE name = ?";
+          $stmt2 = mysqli_prepare($this->link, $query2);
+          if($stmt2)
           {
-              $row2 = $rs2->fetch_assoc();
+             mysqli_stmt_bind_param($stmt2, "s", $appName);
+             mysqli_stmt_execute($stmt2);
+          }
+          
+          if($stmt2)
+          {
+              mysqli_stmt_bind_result(
+                 $stmt2,
+                 $caId,
+                 $caName,
+                 $caLdapName,
+                 $caLoginApiUrl,
+                 $caSessionLifetime
+              );
+              if(!mysqli_stmt_fetch($stmt2))
+              {
+                 $results["detail"] = "queryKo";
+                 return $results;
+              }
+              $row2 = [
+                 'id' => $caId,
+                 'name' => $caName,
+                 'ldapName' => $caLdapName,
+                 'loginApiUrl' => $caLoginApiUrl,
+                 'sessionLifetime' => $caSessionLifetime,
+              ];
               $url = $row2["loginApiUrl"];
               $apiPwd = $this->conf["clientsApiPwd"];
               
@@ -369,15 +455,22 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
               $appLdapName = $row2["ldapName"];
               
                 //Controlliamo se ha la sessione aperta e valida
-                $query3 = "SELECT count(*) AS quantity FROM " . $dbName . ".clientLoggedUsers WHERE usr = MD5('$username') AND clientApplication = MD5('$appLdapName') AND ttl >= UNIX_TIMESTAMP()";
+                $query3 = "SELECT count(*) AS quantity FROM " . $dbName . ".clientLoggedUsers WHERE usr = MD5(?) AND clientApplication = MD5(?) AND ttl >= UNIX_TIMESTAMP()";
                 /*$file = fopen("C:\dashboardLog.txt", "w");
                 fwrite($file, "Query3: " . $query3 . "\n");
                 fclose($file);*/
-                $rs3 = mysqli_query($this->link, $query3);
-                
-                if($rs3)
+                $stmt3 = mysqli_prepare($this->link, $query3);
+                if($stmt3)
                 {
-                    $row3 = $rs3->fetch_assoc();
+                   mysqli_stmt_bind_param($stmt3, "ss", $username, $appLdapName);
+                   mysqli_stmt_execute($stmt3);
+                }
+                
+                if($stmt3)
+                {
+                    mysqli_stmt_bind_result($stmt3, $quantity);
+                    mysqli_stmt_fetch($stmt3);
+                    $row3 = ['quantity' => $quantity];
                     if($row3['quantity'] > 0)
                     {
                         $data = '?apiPwd=' . $apiPwd . "&usr=" . $username . "&pwd=" . md5($this->conf["clientsApiWildcardPwd"]);
@@ -903,8 +996,13 @@ Ya8iBJilFm2UlcXfpUOk9bhBTbgFp+Bv6BZ2Alag7pY=
       mysqli_close($this->link);
       $this->link = mysqli_connect($dbHost, $dbUsr, $dbPwd);
       
-      $query = "DELETE FROM " . $dbName . ".clientLoggedUsers WHERE userIp = '$userIp' AND usr = '$usr' AND clientApplication = '$clientApplication'";
-      $rs = mysqli_query($this->link, $query);
+      $query = "DELETE FROM " . $dbName . ".clientLoggedUsers WHERE userIp = ? AND usr = ? AND clientApplication = ?";
+      $stmt = mysqli_prepare($this->link, $query);
+      if($stmt)
+      {
+         mysqli_stmt_bind_param($stmt, "sss", $userIp, $usr, $clientApplication);
+         $rs = mysqli_stmt_execute($stmt);
+      }
       
         if($rs)
         {
